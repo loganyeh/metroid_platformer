@@ -1,8 +1,16 @@
-[gd_scene load_steps=15 format=3 uid="uid://bshld05kppv2c"]
+[gd_scene load_steps=20 format=3 uid="uid://bshld05kppv2c"]
 
 [ext_resource type="Texture2D" uid="uid://vyr0ks75oxum" path="res://graphics/characters/drone.png" id="1_5r82j"]
 [ext_resource type="Script" path="res://scenes/entities/drone.gd" id="1_86cga"]
+[ext_resource type="Shader" uid="uid://dr7dso72xnt0j" path="res://scenes/shaders/drone.tres" id="2_yujgq"]
 [ext_resource type="Texture2D" uid="uid://bav7n447bnsa5" path="res://graphics/fire/explosion.png" id="3_vhstr"]
+[ext_resource type="Texture2D" uid="uid://dijla4pisrrw8" path="res://graphics/lights/main.png" id="4_amp16"]
+[ext_resource type="AudioStream" uid="uid://dtnqyh7corvdx" path="res://audio/explosion.wav" id="6_bfcba"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_b6n70"]
+shader = ExtResource("2_yujgq")
+shader_parameter/Color = Color(1, 1, 1, 1)
+shader_parameter/Progress = 1.0
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_v5c8v"]
 atlas = ExtResource("1_5r82j")
@@ -46,6 +54,33 @@ radius = 7.0
 [sub_resource type="CircleShape2D" id="CircleShape2D_pdqg4"]
 radius = 129.004
 
+[sub_resource type="Animation" id="Animation_ykorn"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("ExplosionSprite:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("PointLight2D:energy")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [1.0]
+}
+
 [sub_resource type="Animation" id="Animation_dwdpk"]
 resource_name = "explode"
 tracks/0/type = "value"
@@ -75,25 +110,27 @@ tracks/1/keys = {
 }]
 }
 
-[sub_resource type="Animation" id="Animation_ykorn"]
-length = 0.001
+[sub_resource type="Animation" id="Animation_e1870"]
+resource_name = "red light"
+loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("ExplosionSprite:frame")
+tracks/0/path = NodePath("PointLight2D:energy")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [0]
+"times": PackedFloat32Array(0, 0.4),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [1.2, 0.3]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_xdox2"]
 _data = {
 "RESET": SubResource("Animation_ykorn"),
-"explode": SubResource("Animation_dwdpk")
+"explode": SubResource("Animation_dwdpk"),
+"red light": SubResource("Animation_e1870")
 }
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_am5dn"]
@@ -105,13 +142,16 @@ collision_mask = 11
 script = ExtResource("1_86cga")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+material = SubResource("ShaderMaterial_b6n70")
 sprite_frames = SubResource("SpriteFrames_id6t1")
 frame_progress = 0.476037
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+visible = false
 shape = SubResource("CircleShape2D_x2qu5")
 
 [node name="DetectionArea" type="Area2D" parent="."]
+visible = false
 collision_layer = 0
 collision_mask = 2
 
@@ -127,13 +167,25 @@ hframes = 8
 libraries = {
 "": SubResource("AnimationLibrary_xdox2")
 }
+autoplay = "red light"
 
 [node name="CollisionArea" type="Area2D" parent="."]
+visible = false
 collision_layer = 0
 collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CollisionArea"]
 shape = SubResource("CircleShape2D_am5dn")
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+position = Vector2(-2, 2)
+color = Color(1, 0.054902, 0.00392157, 1)
+texture = ExtResource("4_amp16")
+texture_scale = 0.1
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("6_bfcba")
+volume_db = -30.0
 
 [connection signal="body_entered" from="DetectionArea" to="." method="_on_detection_area_body_entered"]
 [connection signal="body_exited" from="DetectionArea" to="." method="_on_detection_area_body_exited"]
